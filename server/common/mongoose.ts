@@ -1,14 +1,14 @@
 import mongoose from 'mongoose';
 
 export default class Mongoose {
-  connectionURI = `mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`;
+  connectionURI = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`;
 
   constructor() {
   }
 
   init() {
     //Set up default mongoose connection
-    mongoose.connect(this.connectionURI);
+    mongoose.connect(this.connectionURI, { useFindAndModify: false, useNewUrlParser: true });
 
     // Get Mongoose to use the global promise library
     mongoose.Promise = global.Promise;

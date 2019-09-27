@@ -1,8 +1,8 @@
 swagger: "2.0"
 info:
   version: 1.0.0
-  title: myapp
-  description: My cool Mongoose, Typescript, Express app
+  title: HH-NG
+  description: HH Real Estates App
 basePath: /api/v1
 tags:
   - name: Examples
@@ -26,6 +26,15 @@ definitions:
       name:
         type: string
         example: no_stress
+  HouseBody:
+    type: object
+    title: house
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        house: no_stress
 
 paths:
   /examples:
@@ -103,6 +112,82 @@ paths:
           description: Delete the example with the specified id
         404:
           description: Example not found
+
+  /houses:
+    get:
+      tags:
+        - Houses
+      description: Fetch all houses
+      responses:
+        200:
+          description: Returns all houses
+    post:
+      tags:
+        - Houses
+      description: Create a new houses
+      parameters:
+        - name: house
+          in: body
+          description: a house
+          required: true
+          schema: 
+            $ref: "#/definitions/HouseBody"
+      responses:
+        200:
+          description: Returns newly created house
+  
+  /houses/{id}:
+    get:
+      tags:
+        - Houses
+      description: Get a house
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the house to retrieve
+          type: string
+      responses:
+        200:
+          description: Return the house with the specified id
+        404:
+          description: House not found
+    patch:
+      tags:
+        - Houses
+      description: Update a house
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the house to update
+          type: string
+        - name: house
+          in: body
+          description: house attribtues to update
+          required: true
+          schema: 
+            $ref: "#/definitions/HouseBody"
+      responses:
+        200:
+          description: Return updated houses
+        404:
+          description: House not found
+    delete:
+      tags:
+        - Houses
+      description: Delete a house
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the house to delete
+          type: string
+      responses:
+        204:
+          description: Delete the house with the specified id
+        404:
+          description: House not found
 
   /spec:
     get:

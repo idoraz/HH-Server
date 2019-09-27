@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import swaggerify from './swagger';
 import l from './logger';
 import Mongoose from './mongoose'
+import housesService from '../api/services/houses.service';
 
 const app = express();
 const mongoose = new Mongoose;
@@ -31,6 +32,7 @@ export default class ExpressServer {
     const welcome = port => () => l.info(`up and running in ${process.env.NODE_ENV || 'development'} @: ${os.hostname() } on port: ${port}}`);
     http.createServer(app).listen(p, welcome(p));
     mongoose.init();
+    console.log(`Server is listening on port ${p}`);
     return app;
   }
 }

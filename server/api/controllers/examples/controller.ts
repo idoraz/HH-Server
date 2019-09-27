@@ -1,13 +1,18 @@
 import ExamplesService from '../../services/examples.service';
 import { Request, Response, NextFunction } from 'express';
 import * as HttpStatus from 'http-status-codes';
+import HousesService from '../../services/houses.service';
 
 export class Controller {
 
   async all(req: Request, res: Response, next: NextFunction) {
     try {
-      const docs = await ExamplesService.all();
-      return res.status(HttpStatus.OK).json(docs);
+
+      const doc = await HousesService.getHouses();
+      return res.status(HttpStatus.OK).json(doc);
+
+      // const docs = await ExamplesService.all();
+      // return res.status(HttpStatus.OK).json(docs);
     }
     catch (err) {
       return next(err);
@@ -48,6 +53,17 @@ export class Controller {
     try {
       const doc = await ExamplesService.remove(req.params.id);
       return res.status(HttpStatus.NO_CONTENT).send();
+    }
+    catch (err) {
+      return next(err);
+    }
+  }
+
+  async getHouses(req: Request, res: Response, next: NextFunction) {
+    try {
+
+      const doc = await HousesService.getHouses();
+      return res.status(HttpStatus.OK).json(doc);
     }
     catch (err) {
       return next(err);
