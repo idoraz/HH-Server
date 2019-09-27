@@ -92,19 +92,24 @@ export class HousesService {
     }
 
     async downloadPdf(url: string, destinationPath: string): Promise<Buffer> {
-        const downloadPdfFile = download(url);
-        const savePdfFile = fs.createWriteStream(destinationPath);
+        try {
+            const downloadPdfFile = download(url);
+            const savePdfFile = fs.createWriteStream(destinationPath);
 
-        downloadPdfFile.pipe(savePdfFile);
+            downloadPdfFile.pipe(savePdfFile);
 
-        const getJsonHouses = new Promise<Buffer>(function (resolve, reject) {
-            savePdfFile.on('finish', () => {
-                resolve(fs.readFileSync(destinationPath));
+            const getJsonHouses = await new Promise<Buffer>(function (resolve, reject) {
+                savePdfFile.on('finish', () => {
+                    resolve(fs.readFileSync(destinationPath));
+                });
+                downloadPdfFile.on('error', reject);
             });
-            downloadPdfFile.on('error', reject);
-        });
 
-        return getJsonHouses;
+            return getJsonHouses;
+        } catch (error) {
+            console.log(error);
+            return error;
+        }
     }
 
     async parsePdfToJson(pdfPath: string, jsonPath: string): Promise<Buffer> {
@@ -407,7 +412,7 @@ export class HousesService {
             await this.getLawFirmsJson(updateHousesResult.auctionID);
 
             // Update houses with Zillow data
-            houses = await this.zillowUpdateHouses(updateHousesResult.auctionID);
+            await this.zillowUpdateHouses(updateHousesResult.auctionID);
 
             // Parse houses to KML file
             const auctionIDConfig = await Config.findOne({ key: 'currentAuctionID' }).lean().exec() as IConfigModel;
@@ -415,6 +420,7 @@ export class HousesService {
             const globalPPDate = await ConfigService.updateGlobalPPDate(auctionIDConfig.value); //TODO: Need to get rid of the houses[0]... parameter
             await this.parseToKml(auctionIDConfig.value, globalPPDate);
 
+            houses = await this.byAuctionID(updateHousesResult.auctionID);
             return houses;
 
         } catch (error) {
@@ -495,7 +501,7 @@ export class HousesService {
 
             let houseIndex = 0;
             // zillowUpdateHousesPromise = [zillowUpdateHousesPromise[0]]; // Use this for debugging! Otherwise the zillow api token will expire for 24 hours
-            if (zillowUpdateHousesPromise.length === 0) { return []; }            
+            if (zillowUpdateHousesPromise.length === 0) { return []; }
             const retVal = await Promise.all(zillowUpdateHousesPromise)
                 .then(async (zillowResults: any) => {
                     const houseUpdateRequests: Promise<IHouseModel>[] = [];

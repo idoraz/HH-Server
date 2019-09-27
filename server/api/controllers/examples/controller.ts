@@ -8,11 +8,8 @@ export class Controller {
   async all(req: Request, res: Response, next: NextFunction) {
     try {
 
-      const doc = await HousesService.getHouses();
-      return res.status(HttpStatus.OK).json(doc);
-
-      // const docs = await ExamplesService.all();
-      // return res.status(HttpStatus.OK).json(docs);
+      const docs = await ExamplesService.all();
+      return res.status(HttpStatus.OK).json(docs);
     }
     catch (err) {
       return next(err);
