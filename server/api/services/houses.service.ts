@@ -225,73 +225,71 @@ export class HousesService {
                                         addindex++;
                                     }
 
-                                    for (let address of addresses) {
-                                        listing.push(address);
-                                        let parsedHouse: any = {};
-                                        parsedHouse.checks = {};
-                                        if (listing.length >= 17) {
-                                            parsedHouse.isPP = isPP;
-                                            if (!listing[13]) {
-                                                continue;
-                                            }
-                                            parsedHouse.auctionNumber = listing[13];
-                                            parsedHouse.docketNumber = listing[0];
-                                            parsedHouse.auctionID = auctionID;
-                                            parsedHouse.attorneyName = listing[1];
-                                            parsedHouse.plaintiffName = listing[2];
-                                            parsedHouse.defendantName = listing[14];
-                                            parsedHouse.saleType = listing[3] && listing[3].match(taxLienRegex) ? "T" : "M";
-                                            const saleDate = new Date(listing[4]);
-                                            parsedHouse.saleDate = saleDate && saleDate.toString() !== 'Invalid Date' ? saleDate : undefined;
-                                            parsedHouse.saleStatus = listing[7];
-                                            const ppDate = new Date(listing[8]);
-                                            parsedHouse.ppDate = ppDate && ppDate.toString() !== 'Invalid Date' ? ppDate : undefined;
-                                            parsedHouse.costTax = listing[5] ? parseFloat(listing[5].replace(new RegExp(' ', 'g'), '').replace(new RegExp(',', 'g'), '')) : -1;
-                                            parsedHouse.costTax = !isNaN(parsedHouse.costTax) ? parsedHouse.costTax : undefined;
-                                            parsedHouse.cost = listing[6] ? parseFloat(listing[6].replace(new RegExp(' ', 'g'), '').replace(new RegExp(',', 'g'), '')) : -1;
-                                            parsedHouse.cost = !isNaN(parsedHouse.cost) ? parsedHouse.cost : undefined;
-                                            parsedHouse.reasonForPP = listing[9];
-                                            parsedHouse.checks.svs = listing[10] && listing[10] === 'Y';
-                                            parsedHouse.checks[3129] = listing[11] && listing[11] === 'Y';
-                                            parsedHouse.checks.ok = listing[12] && listing[12] === 'Y';
-                                            parsedHouse.municipality = listing[15] ? listing[15].replace("Municipality: ", "") : '';
-                                            parsedHouse.address = listing[16] ? listing[16].replace(new RegExp(",", 'g'), "") : '';
-                                            parsedHouse.isDuplicate = addresses.length > 1;
-                                            parsedHouse.isFC = isFreeAndClear;
-                                            parsedHouse.isBank = parsedHouse.plaintiffName ? parsedHouse.plaintiffName.match(bankRegex) ? true : false : false;
-                                        } else {
-                                            parsedHouse.isPP = isPP;
-                                            if (!listing[listing.length - 4]) {
-                                                continue;
-                                            }
-                                            parsedHouse.auctionNumber = listing[listing.length - 4];
-                                            parsedHouse.docketNumber = listing[0];
-                                            parsedHouse.attorneyName = listing[1];
-                                            parsedHouse.auctionID = auctionID;
-                                            parsedHouse.plaintiffName = listing[2];
-                                            parsedHouse.defendantName = listing[listing.length - 3];
-                                            parsedHouse.saleType = listing[3] && listing[3].match(taxLienRegex) ? "T" : "M";
-                                            const saleDate = new Date(listing[4]);
-                                            parsedHouse.saleDate = saleDate && saleDate.toString() !== 'Invalid Date' ? saleDate : undefined;
-                                            parsedHouse.saleStatus = listing[7];
-                                            const ppDate = new Date(listing[8]);
-                                            parsedHouse.ppDate = ppDate && ppDate.toString() !== 'Invalid Date' ? ppDate : undefined;
-                                            parsedHouse.costTax = listing[5] ? parseFloat(listing[5].replace(new RegExp(" ", 'g'), "").replace(new RegExp(',', 'g'), '')) : -1;
-                                            parsedHouse.costTax = !isNaN(parsedHouse.costTax) ? parsedHouse.costTax : undefined;
-                                            parsedHouse.cost = listing[6] ? parseFloat(listing[6].replace(new RegExp(" ", 'g'), "").replace(new RegExp(',', 'g'), '')) : -1;
-                                            parsedHouse.cost = !isNaN(parsedHouse.cost) ? parsedHouse.cost : undefined;
-                                            parsedHouse.reasonForPP = listing.length > 9 ? listing[9] : "";
-                                            parsedHouse.checks.svs = false;
-                                            parsedHouse.checks[3129] = false;
-                                            parsedHouse.checks.ok = false;
-                                            parsedHouse.municipality = listing && listing.length && listing[listing.length - 2] ? listing[listing.length - 2].replace("Municipality: ", "") : '';
-                                            parsedHouse.address = listing && listing.length && listing[listing.length - 1] ? listing[listing.length - 1].replace(new RegExp(",", 'g'), "") : '';
-                                            parsedHouse.isDuplicate = addresses.length > 1;
-                                            parsedHouse.isFC = isFreeAndClear;
-                                            parsedHouse.isBank = parsedHouse.plaintiffName ? parsedHouse.plaintiffName.match(bankRegex) ? true : false : false;
+                                    let parsedHouse: any = {};
+                                    parsedHouse.checks = {};
+                                    listing.push(addresses);
+                                    if (listing.length >= 17) {
+                                        parsedHouse.isPP = isPP;
+                                        if (!listing[13]) {
+                                            continue; //TODO: Need to debug why we get listings with no auctionNumber (very few)
                                         }
-                                        retVal.push(parsedHouse);
-                                    };
+                                        parsedHouse.auctionNumber = listing[13];
+                                        parsedHouse.docketNumber = listing[0];
+                                        parsedHouse.auctionID = auctionID;
+                                        parsedHouse.attorneyName = listing[1];
+                                        parsedHouse.plaintiffName = listing[2];
+                                        parsedHouse.defendantName = listing[14];
+                                        parsedHouse.saleType = listing[3] && listing[3].match(taxLienRegex) ? "T" : "M";
+                                        const saleDate = new Date(listing[4]);
+                                        parsedHouse.saleDate = saleDate && saleDate.toString() !== 'Invalid Date' ? saleDate : undefined;
+                                        parsedHouse.saleStatus = listing[7];
+                                        const ppDate = new Date(listing[8]);
+                                        parsedHouse.ppDate = ppDate && ppDate.toString() !== 'Invalid Date' ? ppDate : undefined;
+                                        parsedHouse.costTax = listing[5] ? parseFloat(listing[5].replace(new RegExp(' ', 'g'), '').replace(new RegExp(',', 'g'), '')) : -1;
+                                        parsedHouse.costTax = !isNaN(parsedHouse.costTax) ? parsedHouse.costTax : undefined;
+                                        parsedHouse.cost = listing[6] ? parseFloat(listing[6].replace(new RegExp(' ', 'g'), '').replace(new RegExp(',', 'g'), '')) : -1;
+                                        parsedHouse.cost = !isNaN(parsedHouse.cost) ? parsedHouse.cost : undefined;
+                                        parsedHouse.reasonForPP = listing[9];
+                                        parsedHouse.checks.svs = listing[10] && listing[10] === 'Y';
+                                        parsedHouse.checks[3129] = listing[11] && listing[11] === 'Y';
+                                        parsedHouse.checks.ok = listing[12] && listing[12] === 'Y';
+                                        parsedHouse.municipality = listing[15] ? listing[15].replace("Municipality: ", "") : '';
+                                        parsedHouse.address = listing[16] && _.isArray(listing[16]) ? listing[16].map(addrss => { return addrss.replace(new RegExp(",", 'g'), "") }) : [];
+                                        parsedHouse.isDuplicate = addresses.length > 1;
+                                        parsedHouse.isFC = isFreeAndClear;
+                                        parsedHouse.isBank = parsedHouse.plaintiffName ? parsedHouse.plaintiffName.match(bankRegex) ? true : false : false;
+                                    } else {
+                                        parsedHouse.isPP = isPP;
+                                        if (!listing[listing.length - 4]) {
+                                            continue;
+                                        }
+                                        parsedHouse.auctionNumber = listing[listing.length - 4];
+                                        parsedHouse.docketNumber = listing[0];
+                                        parsedHouse.attorneyName = listing[1];
+                                        parsedHouse.auctionID = auctionID;
+                                        parsedHouse.plaintiffName = listing[2];
+                                        parsedHouse.defendantName = listing[listing.length - 3];
+                                        parsedHouse.saleType = listing[3] && listing[3].match(taxLienRegex) ? "T" : "M";
+                                        const saleDate = new Date(listing[4]);
+                                        parsedHouse.saleDate = saleDate && saleDate.toString() !== 'Invalid Date' ? saleDate : undefined;
+                                        parsedHouse.saleStatus = listing[7];
+                                        const ppDate = new Date(listing[8]);
+                                        parsedHouse.ppDate = ppDate && ppDate.toString() !== 'Invalid Date' ? ppDate : undefined;
+                                        parsedHouse.costTax = listing[5] ? parseFloat(listing[5].replace(new RegExp(" ", 'g'), "").replace(new RegExp(',', 'g'), '')) : -1;
+                                        parsedHouse.costTax = !isNaN(parsedHouse.costTax) ? parsedHouse.costTax : undefined;
+                                        parsedHouse.cost = listing[6] ? parseFloat(listing[6].replace(new RegExp(" ", 'g'), "").replace(new RegExp(',', 'g'), '')) : -1;
+                                        parsedHouse.cost = !isNaN(parsedHouse.cost) ? parsedHouse.cost : undefined;
+                                        parsedHouse.reasonForPP = listing.length > 9 ? listing[9] : "";
+                                        parsedHouse.checks.svs = false;
+                                        parsedHouse.checks[3129] = false;
+                                        parsedHouse.checks.ok = false;
+                                        parsedHouse.municipality = listing && listing.length && listing[listing.length - 2] ? listing[listing.length - 2].replace("Municipality: ", "") : '';
+                                        parsedHouse.address = listing && listing.length && listing[listing.length - 1] && _.isArray(listing[listing.length - 1]) ? listing[listing.length - 1].map(addrss => { return addrss.replace(new RegExp(",", 'g'), "") }) : [];
+                                        parsedHouse.isDuplicate = addresses.length > 1;
+                                        parsedHouse.isFC = isFreeAndClear;
+                                        parsedHouse.isBank = parsedHouse.plaintiffName ? parsedHouse.plaintiffName.match(bankRegex) ? true : false : false;
+                                    }
+                                    retVal.push(parsedHouse);
 
                                     listing = [];
                                     addToListing = false;
@@ -393,7 +391,7 @@ export class HousesService {
         try {
             // Download PDF files
             await this.downloadPdf(BIDLIST_PDF_URL, BIDLIST_FILE_PATH);
-            await this.downloadPdf(POSTPONEMENTS_PDF_URL, POSTPENMENTS_FILE_PATH);
+            await this.downloadPdf(POSTPONEMENTS_PDF_URL, POSTPENMENTS_FILE_PATH); //For some unknown reason the download of this file might take too long, it looks like an issue with the Sheriff website it it's stuck just wait 10 minutes and try again
 
             // Parse PDF to JSON
             await this.parsePdfToJson(BIDLIST_FILE_PATH, BIDLIST_JSON_FILE_PATH);
@@ -476,20 +474,22 @@ export class HousesService {
 
         try {
             const houses = await this.byAuctionID(auctionID);
+            const housesSentToZillow: IHouseModel[] = [];
             const zillowToken = await this.getValidZillowApiToken(houses);
             const zillow = new Zillow(zillowToken);
             let zillowUpdateHousesPromise: Promise<IHouseModel>[] = [];
             for (let house of houses) {
                 try {
-                    if (!house.address) { throw new Error('Invalid address for house!'); }
-                    house.address = house.address.replace("undefined", "");
-                    const zipCode = house.address.match(/\b\d{5}\b/g)[0] || '';
+                    if (!house.address || !_.isArray(house.address) || house.address.length < 1) { throw new Error('Invalid address for house!'); }
+                    house.address[0] = house.address[0].replace("undefined", "");
+                    const zipCode = house.address[0].match(/\b\d{5}\b/g)[0] || '';
                     const params = {
                         citystatezip: zipCode,
-                        address: house.address.replace(zipCode, "")
+                        address: house.address[0].replace(zipCode, "")
                     }
                     if (!house.zillowInvalid && (!house.zillowData || !house.zillowData.lastZillowUpdate || !moment(house.zillowData.lastZillowUpdate).isSame(moment().startOf('day'), 'd'))) {
                         zillowUpdateHousesPromise.push(zillow.get('GetDeepSearchResults', params));
+                        housesSentToZillow.push(house);
                     }
                 } catch (error) {
                     house.zillowInvalid = true;
@@ -512,37 +512,37 @@ export class HousesService {
                                 if (zillowResult.message.code == 7) {
                                     console.log(zillowResult.message.text);
                                 } else {
-                                    houses[houseIndex].zillowInvalid = true;
-                                    this.patch(houses[houseIndex].auctionNumber, houses[houseIndex]);
+                                    housesSentToZillow[houseIndex].zillowInvalid = true;
+                                    this.patch(housesSentToZillow[houseIndex].auctionNumber, housesSentToZillow[houseIndex]);
                                 }
                                 houseIndex++;
                                 continue;
                             }
                             const zillowData: any = {};
-                            houses[houseIndex].zillowData = zillowData;
-                            houses[houseIndex].zillowData.taxAssessment = !_.isEmpty(result.taxAssessment) && _.isArray(result.taxAssessment) ? result.taxAssessment[0] : "";
-                            houses[houseIndex].zillowData.zillowEstimate = !_.isEmpty(result.zestimate) && _.isArray(result.zestimate) && !_.isEmpty(result.zestimate[0].amount) && _.isArray(result.zestimate[0].amount) ? result.zestimate[0].amount[0]['_'] : "";
-                            houses[houseIndex].zillowData.rooms = !_.isEmpty(result.bedrooms) && _.isArray(result.bedrooms) ? result.bedrooms[0] : "";
-                            houses[houseIndex].zillowData.bath = !_.isEmpty(result.bathrooms) && _.isArray(result.bathrooms) ? result.bathrooms[0] : "";
-                            houses[houseIndex].zillowData.sqft = !_.isEmpty(result.finishedSqFt) && _.isArray(result.finishedSqFt) ? result.finishedSqFt[0] : "";
-                            houses[houseIndex].zillowData.yearBuilt = !_.isEmpty(result.yearBuilt) && _.isArray(result.yearBuilt) ? result.yearBuilt[0] : "";
-                            houses[houseIndex].zillowData.zillowID = !_.isEmpty(result.zpid) && _.isArray(result.zpid) ? result.zpid[0] : "";
-                            houses[houseIndex].zillowData.zillowLink = !_.isEmpty(result.links) && _.isArray(result.links) && !_.isEmpty(result.links[0].homedetails) && _.isArray(result.links[0].homedetails) ? result.links[0].homedetails[0] : "";
-                            houses[houseIndex].zillowData.lastSoldDate = !_.isEmpty(result.lastSoldDate) && _.isArray(result.lastSoldDate) ? result.lastSoldDate[0] : "";
-                            houses[houseIndex].zillowData.lastSoldPrice = !_.isEmpty(result.lastSoldPrice) && _.isArray(result.lastSoldPrice) ? result.lastSoldPrice[0]['_'] : "";
-                            houses[houseIndex].zillowData.zillowAddress = !_.isEmpty(result.address) && _.isArray(result.address) && !_.isEmpty(result.address[0]) ? result.address[0].street + ', ' + result.address[0].city + ', ' + result.address[0].state + ', ' + result.address[0].zipcode : "";
-                            houses[houseIndex].zillowData.coords = {
+                            housesSentToZillow[houseIndex].zillowData = zillowData;
+                            housesSentToZillow[houseIndex].zillowData.taxAssessment = !_.isEmpty(result.taxAssessment) && _.isArray(result.taxAssessment) ? result.taxAssessment[0] : "";
+                            housesSentToZillow[houseIndex].zillowData.zillowEstimate = !_.isEmpty(result.zestimate) && _.isArray(result.zestimate) && !_.isEmpty(result.zestimate[0].amount) && _.isArray(result.zestimate[0].amount) ? result.zestimate[0].amount[0]['_'] : "";
+                            housesSentToZillow[houseIndex].zillowData.rooms = !_.isEmpty(result.bedrooms) && _.isArray(result.bedrooms) ? result.bedrooms[0] : "";
+                            housesSentToZillow[houseIndex].zillowData.bath = !_.isEmpty(result.bathrooms) && _.isArray(result.bathrooms) ? result.bathrooms[0] : "";
+                            housesSentToZillow[houseIndex].zillowData.sqft = !_.isEmpty(result.finishedSqFt) && _.isArray(result.finishedSqFt) ? result.finishedSqFt[0] : "";
+                            housesSentToZillow[houseIndex].zillowData.yearBuilt = !_.isEmpty(result.yearBuilt) && _.isArray(result.yearBuilt) ? result.yearBuilt[0] : "";
+                            housesSentToZillow[houseIndex].zillowData.zillowID = !_.isEmpty(result.zpid) && _.isArray(result.zpid) ? result.zpid[0] : "";
+                            housesSentToZillow[houseIndex].zillowData.zillowLink = !_.isEmpty(result.links) && _.isArray(result.links) && !_.isEmpty(result.links[0].homedetails) && _.isArray(result.links[0].homedetails) ? result.links[0].homedetails[0] : "";
+                            housesSentToZillow[houseIndex].zillowData.lastSoldDate = !_.isEmpty(result.lastSoldDate) && _.isArray(result.lastSoldDate) ? result.lastSoldDate[0] : "";
+                            housesSentToZillow[houseIndex].zillowData.lastSoldPrice = !_.isEmpty(result.lastSoldPrice) && _.isArray(result.lastSoldPrice) ? result.lastSoldPrice[0]['_'] : "";
+                            housesSentToZillow[houseIndex].zillowData.zillowAddress = !_.isEmpty(result.address) && _.isArray(result.address) && !_.isEmpty(result.address[0]) ? result.address[0].street + ', ' + result.address[0].city + ', ' + result.address[0].state + ', ' + result.address[0].zipcode : "";
+                            housesSentToZillow[houseIndex].zillowData.coords = {
                                 latitude: !_.isEmpty(result.address) && _.isArray(result.address) && !_.isEmpty(result.address[0].latitude) && _.isArray(result.address[0].latitude) ? result.address[0].latitude[0] : undefined,
                                 longitude: !_.isEmpty(result.address) && _.isArray(result.address) && !_.isEmpty(result.address[0].longitude) && _.isArray(result.address[0].longitude) ? result.address[0].longitude[0] : undefined
                             };
-                            houses[houseIndex].zillowInvalid = false;
-                            houses[houseIndex].zillowData.zillowID = !_.isEmpty(result.zpid) ? result.zpid[0] : "";
-                            houses[houseIndex].zillowData.lastZillowUpdate = new Date();
-                            houseUpdateRequests.push(this.patch(houses[houseIndex].auctionNumber, houses[houseIndex]));
+                            housesSentToZillow[houseIndex].zillowInvalid = false;
+                            housesSentToZillow[houseIndex].zillowData.zillowID = !_.isEmpty(result.zpid) ? result.zpid[0] : "";
+                            housesSentToZillow[houseIndex].zillowData.lastZillowUpdate = new Date();
+                            houseUpdateRequests.push(this.patch(housesSentToZillow[houseIndex].auctionNumber, housesSentToZillow[houseIndex]));
                             houseIndex++;
                         } catch (error) {
-                            houses[houseIndex].zillowInvalid = true;
-                            this.patch(houses[houseIndex].auctionNumber, houses[houseIndex]); //TODO: This should be added to the promise array
+                            housesSentToZillow[houseIndex].zillowInvalid = true;
+                            this.patch(housesSentToZillow[houseIndex].auctionNumber, housesSentToZillow[houseIndex]); //TODO: This should be added to the promise array
                             houseIndex++;
                             continue;
                         }
@@ -604,7 +604,7 @@ export class HousesService {
         kml.push('<LookAt><longitude>-79.997</longitude><latitude>40.445</latitude><altitude>0</altitude>');
         kml.push('<heading>-148.4122922628044</heading><tilt>0</tilt><range>500000</range></LookAt>');
 
-        const houses = await House.find({ auctionID: auctionID }).lean().exec() as IHouseModel[];
+        const houses = await House.find({ auctionID: auctionID, zillowInvalid: false }).lean().exec() as IHouseModel[];
 
         for (let house of houses) {
             kml.push(this.buildKmlString(house, globalPPDate));
@@ -630,7 +630,7 @@ export class HousesService {
 
         try {
             stream.push('<Placemark>');
-            stream.push('<name>', house.zillowData ? house.zillowData.zillowAddress : '', '</name>');
+            stream.push('<name>', house.zillowData ? house.zillowData.zillowAddress : house.address && house.address.length && house.address.length > 0 ? house.address[0] : '', '</name>');
             stream.push('<styleUrl>', markerType, '</styleUrl>');
             stream.push('<ExtendedData>');
             stream.push('<Data name="Auction Number"><value>', house.auctionNumber, '</value></Data>');
@@ -733,9 +733,9 @@ export class HousesService {
 
             for (let house of houses) {
                 const zillowRequests = [];
-                if (house.address) {
-                    address = house.address.replace("undefined", "");
-                    zipCode = house.address.match(/\b\d{5}\b/g)[0] || '';
+                if (house.address && _.isArray(house.address) && house.address.length > 0) {
+                    address = house.address[0].replace("undefined", "");
+                    zipCode = house.address[0].match(/\b\d{5}\b/g)[0] || '';
                     if (!address && !zipCode) { continue; }
                     const params = {
                         citystatezip: zipCode,
@@ -749,7 +749,7 @@ export class HousesService {
                         .then(results => {
                             let index = 0;
                             validationAttempts++;
-                            console.log(`Attempt #${validationAttempts + 1} to get valid Zillow api token`);
+                            console.log(`Attempt #${validationAttempts} to get valid Zillow api token`);
                             for (let result of results) {
                                 if (result.message.code == 0) {
                                     return zillowTokens[index];

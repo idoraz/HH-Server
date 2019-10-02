@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 
 export interface IHouseModel extends mongoose.Document {
     auctionNumber: string; // Auction Number
-    address: string;
+    address: string[];
     attorneyName: string;
     auctionID: string;
     checks: {
@@ -54,7 +54,7 @@ export interface IHouseModel extends mongoose.Document {
 
 const schema = new Schema({
     auctionNumber: String, // Auction Number
-    address: String,
+    address: [String],
     attorneyName: String,
     auctionID: String,
     checks: {
