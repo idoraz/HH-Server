@@ -11,6 +11,7 @@ import { House, IHouseModel } from '../models/house';
 import ConfigService from '../services/config.service';
 import configService from '../services/config.service';
 import { Config, IConfigModel } from '../models/config';
+import NodeGeocoder from 'node-geocoder';
 const moment = require('moment');
 const { promisify } = require("util");
 const writeFile = promisify(fs.writeFile);
@@ -412,11 +413,14 @@ export class HousesService {
             // Update houses with Zillow data
             await this.zillowUpdateHouses(updateHousesResult.auctionID);
 
+            // Updating Invalid houses via Google Gecoding
+            const auctionID = await this.getCurrentAuctionID();
+            if (!auctionID) { throw new Error('Unable to find current auctionID!'); }
+            await this.invalidHousesGeolcation(auctionID);
+
             // Parse houses to KML file
-            const auctionIDConfig = await Config.findOne({ key: 'currentAuctionID' }).lean().exec() as IConfigModel;
-            if (!auctionIDConfig) { throw new Error('Unable to find global PP date in DB!'); }
-            const globalPPDate = await ConfigService.updateGlobalPPDate(auctionIDConfig.value); //TODO: Need to get rid of the houses[0]... parameter
-            await this.parseToKml(auctionIDConfig.value, globalPPDate);
+            const globalPPDate = await ConfigService.updateGlobalPPDate(auctionID);
+            await this.parseToKml(auctionID, globalPPDate);
 
             houses = await this.byAuctionID(updateHousesResult.auctionID);
             return houses;
@@ -487,7 +491,7 @@ export class HousesService {
                         citystatezip: zipCode,
                         address: house.address[0].replace(zipCode, "")
                     }
-                    if (!house.zillowInvalid && (!house.zillowData || !house.zillowData.lastZillowUpdate || !moment(house.zillowData.lastZillowUpdate).isSame(moment().startOf('day'), 'd'))) {
+                    if ((!house.zillowInvalid || house.coords && house.coords.latitude && house.coords.longitude) && (!house.zillowData || !house.zillowData.lastZillowUpdate || !moment(house.zillowData.lastZillowUpdate).isSame(moment().startOf('day'), 'd'))) {
                         zillowUpdateHousesPromise.push(zillow.get('GetDeepSearchResults', params));
                         housesSentToZillow.push(house);
                     }
@@ -499,8 +503,7 @@ export class HousesService {
 
             }
 
-            let houseIndex = 0;
-            // zillowUpdateHousesPromise = [zillowUpdateHousesPromise[0]]; // Use this for debugging! Otherwise the zillow api token will expire for 24 hours
+            let houseIndex = 0;            
             if (zillowUpdateHousesPromise.length === 0) { return []; }
             const retVal = await Promise.all(zillowUpdateHousesPromise)
                 .then(async (zillowResults: any) => {
@@ -531,7 +534,7 @@ export class HousesService {
                             housesSentToZillow[houseIndex].zillowData.lastSoldDate = !_.isEmpty(result.lastSoldDate) && _.isArray(result.lastSoldDate) ? result.lastSoldDate[0] : "";
                             housesSentToZillow[houseIndex].zillowData.lastSoldPrice = !_.isEmpty(result.lastSoldPrice) && _.isArray(result.lastSoldPrice) ? result.lastSoldPrice[0]['_'] : "";
                             housesSentToZillow[houseIndex].zillowData.zillowAddress = !_.isEmpty(result.address) && _.isArray(result.address) && !_.isEmpty(result.address[0]) ? result.address[0].street + ', ' + result.address[0].city + ', ' + result.address[0].state + ', ' + result.address[0].zipcode : "";
-                            housesSentToZillow[houseIndex].zillowData.coords = {
+                            housesSentToZillow[houseIndex].coords = {
                                 latitude: !_.isEmpty(result.address) && _.isArray(result.address) && !_.isEmpty(result.address[0].latitude) && _.isArray(result.address[0].latitude) ? result.address[0].latitude[0] : undefined,
                                 longitude: !_.isEmpty(result.address) && _.isArray(result.address) && !_.isEmpty(result.address[0].longitude) && _.isArray(result.address[0].longitude) ? result.address[0].longitude[0] : undefined
                             };
@@ -582,7 +585,7 @@ export class HousesService {
         kml.push('<kml xmlns = "http://www.opengis.net/kml/2.2"><Document><name>');
         kml.push(currentMonth);
         kml.push('</name><open>1</open><description>');
-        kml.push(currentMonth + ' postponements</description><name>Placemarks</name>');
+        kml.push(`${currentMonth} postponements</description><name>Placemarks</name>`);
         kml.push('<Style id = "stayPlacemark"><IconStyle><Icon><href>');
         kml.push('http://maps.google.com/mapfiles/ms/icons/grey.png', '</href></Icon></IconStyle></Style>');
         kml.push('<Style id = "mortgageExpensivePlacemark"><IconStyle><Icon><href>');
@@ -601,10 +604,12 @@ export class HousesService {
         kml.push('http://maps.google.com/mapfiles/ms/icons/green-dot.png', '</href></Icon></IconStyle></Style>');
         kml.push('<Style id = "bankPlacemark"><IconStyle><Icon><href>');
         kml.push('http://maps.google.com/mapfiles/ms/icons/green.png', '</href></Icon></IconStyle></Style>');
+        kml.push('<Style id = "zillowInvalid"><IconStyle><Icon><href>');
+        kml.push('http://maps.google.com/mapfiles/ms/icons/orange.png', '</href></Icon></IconStyle></Style>');
         kml.push('<LookAt><longitude>-79.997</longitude><latitude>40.445</latitude><altitude>0</altitude>');
         kml.push('<heading>-148.4122922628044</heading><tilt>0</tilt><range>500000</range></LookAt>');
 
-        const houses = await House.find({ auctionID: auctionID, zillowInvalid: false }).lean().exec() as IHouseModel[];
+        const houses = await House.find({ auctionID: auctionID, coords: { $exists: true } }).lean().exec() as IHouseModel[];
 
         for (let house of houses) {
             kml.push(this.buildKmlString(house, globalPPDate));
@@ -662,10 +667,10 @@ export class HousesService {
             }
             stream.push('</ExtendedData>');
             stream.push('<Point>');
-            stream.push('<coordinates>', house.zillowData && house.zillowData.coords ? house.zillowData.coords.longitude : '', ',', house.zillowData && house.zillowData.coords ? house.zillowData.coords.latitude : '', ',0</coordinates>');
+            stream.push('<coordinates>', house.coords && house.coords.longitude ? house.coords.longitude : '', ',', house.coords && house.coords.latitude ? house.coords.latitude : '', ',0</coordinates>');
             stream.push('</Point></Placemark>');
 
-            return stream.join("");
+            return stream.join("").replace(/[&]/g, '');
         } catch (ex) {
             return "";
         }
@@ -674,6 +679,9 @@ export class HousesService {
     analyzeMarkerType(house: IHouseModel, globalPPDate: Date): string {
 
         try {
+            if (house.zillowInvalid) {
+                return "#zillowInvalid";
+            }
             if (house.saleStatus && house.saleStatus === "STAYED") {
                 return "#stayPlacemark";
             }
@@ -815,6 +823,60 @@ export class HousesService {
             console.log(`Updating ${houses.length} houses with law firms data...`);
             await this.updateHouses(houses);
             return;
+
+        } catch (error) {
+            console.log(error);
+            return;
+        }
+    }
+
+    async getCurrentAuctionID(): Promise<string> {
+        const config = await Config.findOne({ key: 'currentAuctionID' }).lean().exec() as IConfigModel;
+        return config.value;        
+    }
+
+    async invalidHousesGeolcation(auctionID): Promise<void> {
+        try {
+            const options = {
+                provider: 'google',
+                httpAdapter: 'https',
+                apiKey: process.env.GOOGLE_GEOLOCATION_API_KEY,
+                formatter: null
+            };
+            const geocoder = NodeGeocoder(options);
+            const houses: IHouseModel[] = [];
+
+            const invalidHouses = await House
+                .find({ auctionID: auctionID, zillowInvalid: true, coords: { $exists: false }, 'address.0': { $exists: true, $ne: '' } })
+                .lean()
+                .exec() as IHouseModel[];
+            
+            invalidHouses.map(house => {
+                houses.push(geocoder.geocode(house.address[0]));
+            });
+
+            Promise.all(houses)
+                .then(async geolocationResults => {
+                    if (!geolocationResults || geolocationResults.length === 0) return;
+                    let updatedHouses: IHouseModel[];
+                    geolocationResults.map(result => {
+                        updatedHouses = invalidHouses.map(house => {
+                            if (house.address[0].includes(result[0].zipcode)) {
+                                house.coords = {
+                                    latitude: result[0].latitude,
+                                    longitude: result[0].longitude
+                                };
+                                house.address[0] = result[0].formattedAddress;
+                            }
+                            return house;
+                        })
+                    })
+                    updatedHouses = updatedHouses.filter(house => house.coords && house.coords.latitude && house.coords.longitude);
+                    await this.updateHouses(updatedHouses);
+                })
+                .catch(error => {
+                    console.log(error);
+                })
 
         } catch (error) {
             console.log(error);

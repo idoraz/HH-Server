@@ -14,6 +14,10 @@ export interface IHouseModel extends mongoose.Document {
         ok: boolean
     },
     contactEmail: string;
+    coords: {
+        latitude: string,
+        longitude: string
+    },
     cost: number;
     costTax: number;
     defendantName: string;
@@ -63,6 +67,10 @@ const schema = new Schema({
         ok: Boolean
     },
     contactEmail: String,
+    coords: {
+        latitude: String,
+        longitude: String,
+    },
     cost: Number,
     costTax: Number,
     defendantName: String,
