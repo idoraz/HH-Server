@@ -478,10 +478,11 @@ export class HousesService {
 
         try {
             const houses = await this.byAuctionID(auctionID);
-            const housesSentToZillow: IHouseModel[] = [];
             const zillowToken = await this.getValidZillowApiToken(houses);
-            const zillow = new Zillow(zillowToken);
-            let zillowUpdateHousesPromise: Promise<IHouseModel>[] = [];
+            const zillow = new Zillow(zillowToken);            
+            let housesSentToZillow: IHouseModel[];            
+            let zillowUpdateHousesPromise: Promise<IHouseModel>[];
+
             for (let house of houses) {
                 try {
                     if (!house.address || !_.isArray(house.address) || house.address.length < 1) { throw new Error('Invalid address for house!'); }
@@ -497,13 +498,13 @@ export class HousesService {
                     }
                 } catch (error) {
                     house.zillowInvalid = true;
-                    this.patch(house.auctionNumber, house);
+                    this.patch(house.auctionNumber, house);                    
                     continue;
                 }
 
             }
 
-            let houseIndex = 0;            
+            let houseIndex = 0;
             if (zillowUpdateHousesPromise.length === 0) { return []; }
             const retVal = await Promise.all(zillowUpdateHousesPromise)
                 .then(async (zillowResults: any) => {
@@ -514,6 +515,7 @@ export class HousesService {
                             if (!result) {
                                 if (zillowResult.message.code == 7) {
                                     console.log(zillowResult.message.text);
+                                    //TODO: Consider throwing an exception here
                                 } else {
                                     housesSentToZillow[houseIndex].zillowInvalid = true;
                                     this.patch(housesSentToZillow[houseIndex].auctionNumber, housesSentToZillow[houseIndex]);
