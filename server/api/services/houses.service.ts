@@ -480,8 +480,8 @@ export class HousesService {
             const houses = await this.byAuctionID(auctionID);
             const zillowToken = await this.getValidZillowApiToken(houses);
             const zillow = new Zillow(zillowToken);            
-            let housesSentToZillow: IHouseModel[];            
-            let zillowUpdateHousesPromise: Promise<IHouseModel>[];
+            let housesSentToZillow: IHouseModel[] = [];            
+            let zillowUpdateHousesPromise: Promise<IHouseModel>[] = [];
 
             for (let house of houses) {
                 try {
