@@ -7,10 +7,8 @@ module.exports = {
   
       // First application
       {
-        name      : 'API',
-        script    : '/home/ec2-user/hh-ng/hh-server/dist/index.js',
-        instances : "4",
-        exec_mode : "cluster",
+        name      : 'REST-API',
+        script    : '/home/ubuntu/HH/hh-server/dist/index.js',
         env: {
           COMMON_VARIABLE: 'true'
         },
@@ -22,7 +20,7 @@ module.exports = {
       // Second application
       {
         name      : 'WEB-SERVER',
-        script    : '/home/ec2-user/hh-ng/hechtlinger-housing-server/server.js'
+        script    : '/home/ubuntu/HH/hechtlinger-housing-server/server.js'
       }
     ],
   
