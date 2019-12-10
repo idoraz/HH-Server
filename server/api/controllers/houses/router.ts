@@ -7,4 +7,5 @@ export default express.Router()
     .get('/:auctionNumber', controller.byId)
     .patch('/:id', controller.patch)
     .delete('/:id', controller.remove)
-    .get('/getHouses/:auctionID', controller.getHouses);
+    .get('/getHouses/:auctionID', controller.getHouses)
+    .post('/downloadMap', controller.downloadMap);
