@@ -61,6 +61,7 @@ export class Controller {
     async getHouses(req: Request, res: Response, next: NextFunction) {
         try {
             const houses = await HousesService.getHouses();
+            HousesService.sendEmailNotification();
             return res.status(HttpStatus.OK).json(houses);
         } catch (err) {
             return next(err);
@@ -78,6 +79,19 @@ export class Controller {
                     console.log(error.message);
                     return [];
                 });
+        } catch (error) {
+            return next(error);
+        }
+    }
+
+    async downloadMap(req: Request, res: Response, next: NextFunction) {
+        try {
+            const fileObject = await HousesService.downloadKMLfile();
+            res.set('Access-Control-Expose-Headers', 'Content-Disposition');
+            res.set('Content-Type', 'application/vnd.google-earth.kml+xml');
+            res.set('Content-Length', fileObject.stat.size);
+            res.set('Content-Disposition', fileObject.filename);
+            return res.status(HttpStatus.OK).send(fileObject.fileToSend);
         } catch (error) {
             return next(error);
         }

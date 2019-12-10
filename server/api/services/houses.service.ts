@@ -12,6 +12,7 @@ import ConfigService from '../services/config.service';
 import configService from '../services/config.service';
 import { Config, IConfigModel } from '../models/config';
 import NodeGeocoder from 'node-geocoder';
+import path from 'path';
 const moment = require('moment');
 const { promisify } = require("util");
 const writeFile = promisify(fs.writeFile);
@@ -884,6 +885,22 @@ export class HousesService {
             console.log(error);
             return;
         }
+    }
+
+    async sendEmailNotification(): Promise<void> {
+
+    }
+
+    downloadKMLfile(): any {
+        const filename = 'map.kml';
+        const filePath = path.join(__dirname, '..', '..', '..', 'kml', filename);
+        const stat = fs.statSync(filePath);
+        const fileToSend = fs.readFileSync(filePath);
+        return {
+            filename,
+            stat,
+            fileToSend
+        };
     }
 
 }

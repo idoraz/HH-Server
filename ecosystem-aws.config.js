@@ -15,13 +15,7 @@ module.exports = {
         env_production : {
           NODE_ENV: 'production'
         }
-      },
-  
-      // Second application
-      {
-        name      : 'WEB-SERVER',
-        script    : '/home/ubuntu/HH/hechtlinger-housing-server/server.js'
-      }
+      }      
     ],
   
     /**
