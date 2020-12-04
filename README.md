@@ -2,6 +2,10 @@
 
 hh rest api server
 
+## AWS Deployment
+
+sudo pm2 start ecosystem-aws.config.js
+
 ## Quick Start
 
 Get started developing...
