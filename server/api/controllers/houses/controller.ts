@@ -1,13 +1,14 @@
-import { IHouseModel, House } from './../../models/house';
-import HousesService from '../../services/houses.service';
 import { Request, Response, NextFunction } from 'express';
 import * as HttpStatus from 'http-status-codes';
+
+import { IHouseModel } from './../../models/house';
+import HousesService from '../../services/houses.service';
 
 export class Controller {
     async all(req: Request, res: Response, next: NextFunction) {
         try {
-            const docs = await HousesService.all();
-            return res.status(HttpStatus.OK).json(docs);
+            const houses = await HousesService.all();
+            return res.status(HttpStatus.OK).json(houses);
         } catch (err) {
             return next(err);
         }
@@ -25,10 +26,7 @@ export class Controller {
     async create(req: Request, res: Response, next: NextFunction) {
         try {
             const doc = await HousesService.create(req.body);
-            return res
-                .status(HttpStatus.CREATED)
-                .location(`/api/v1/houses/${doc._id}`)
-                .json(doc);
+            return res.status(HttpStatus.CREATED).location(`/api/v1/houses/${doc._id}`).json(doc);
         } catch (err) {
             return next(err);
         }
@@ -36,14 +34,8 @@ export class Controller {
 
     async patch(req: Request, res: Response, next: NextFunction) {
         try {
-            const doc = await HousesService.patch(
-                req.params.auctionNumber,
-                req.body
-            );
-            return res
-                .status(HttpStatus.OK)
-                .location(`/api/v1/houses/${doc._id}`)
-                .json(doc);
+            const doc = await HousesService.patch(req.params.auctionNumber, req.body);
+            return res.status(HttpStatus.OK).location(`/api/v1/houses/${doc._id}`).json(doc);
         } catch (err) {
             return next(err);
         }
@@ -71,10 +63,10 @@ export class Controller {
     async saveHouses(req: Request, res: Response, next: NextFunction) {
         try {
             HousesService.updateHouses(req.body.houses as IHouseModel[])
-                .then(houses => {
+                .then((houses) => {
                     return houses;
                 })
-                .catch(error => {
+                .catch((error) => {
                     console.log(`Failed to update houses!`);
                     console.log(error.message);
                     return [];

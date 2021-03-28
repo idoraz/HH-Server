@@ -1,9 +1,7 @@
 dist
 node_modules
 .env
-/houses/blHousing.pdf
-/houses/psHousing.pdf
-/kml/map.kml
+/houses
+/pdf2json
+/kml
 /dist
-/pdf2json/blHousing.json
-/pdf2json/psHousing.json
