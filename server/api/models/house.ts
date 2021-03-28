@@ -9,15 +9,15 @@ export interface IHouseModel extends mongoose.Document {
     attorneyName: string;
     auctionID: string;
     checks: {
-        svs: boolean,
-        "3129": boolean,
-        ok: boolean
-    },
+        svs: boolean;
+        '3129': boolean;
+        ok: boolean;
+    };
     contactEmail: string;
     coords: {
-        latitude: string,
-        longitude: string
-    },
+        latitude: string;
+        longitude: string;
+    };
     cost: number;
     costTax: number;
     defendantName: string;
@@ -29,6 +29,7 @@ export interface IHouseModel extends mongoose.Document {
     firmName: string;
     judgment: number;
     municipality: string;
+    parcelId: number;
     plaintiffName: string;
     ppDate: Date;
     reasonForPP: string;
@@ -36,25 +37,26 @@ export interface IHouseModel extends mongoose.Document {
     saleDate: Date;
     saleStatus: string; //TODO: use enum
     zillowData: {
-        bath: number,
+        bath: number;
         coords: {
-            latitude: string,
-            longitude: string
-        },
-        lastSoldDate: Date,
-        lastSoldPrice: number,
-        lastZillowUpdate: Date,
-        rooms: number,
-        sqft: number,
-        taxAssessment: number,
-        yearBuilt: number,
-        zillowAddress: string,
-        zillowEstimate: number,
-        zillowID: string,
-        zillowLink: string
+            latitude: string;
+            longitude: string;
+        };
+        lastSoldDate: Date;
+        lastSoldPrice: number;
+        lastZillowUpdate: Date;
+        rooms: number;
+        sqft: number;
+        taxAssessment: number;
+        yearBuilt: number;
+        zillowAddress: string;
+        zillowEstimate: number;
+        zillowRentalEstimate: number;
+        zillowID: string;
+        zillowLink: string;
     };
     zillowInvalid: boolean;
-};
+}
 
 const schema = new Schema({
     auctionNumber: String, // Auction Number
@@ -63,13 +65,13 @@ const schema = new Schema({
     auctionID: String,
     checks: {
         svs: Boolean,
-        "3129": Boolean,
+        '3129': Boolean,
         ok: Boolean
     },
     contactEmail: String,
     coords: {
         latitude: String,
-        longitude: String,
+        longitude: String
     },
     cost: Number,
     costTax: Number,
@@ -82,6 +84,7 @@ const schema = new Schema({
     firmName: String,
     judgment: Number,
     municipality: String,
+    parcelId: Number,
     plaintiffName: String,
     ppDate: Date,
     reasonForPP: String,
@@ -103,6 +106,7 @@ const schema = new Schema({
         yearBuilt: Number,
         zillowAddress: String,
         zillowEstimate: Number,
+        zillowRentalEstimate: Number,
         zillowID: String,
         zillowLink: String
     },
@@ -110,4 +114,4 @@ const schema = new Schema({
 });
 
 schema.plugin(timestamps);
-export const House = mongoose.model<IHouseModel>("House", schema);
+export const House = mongoose.model<IHouseModel>('House', schema);

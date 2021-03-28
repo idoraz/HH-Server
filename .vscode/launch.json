@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${cwd}\\dist\\index.js"
+            "program": "${cwd}/dist/index.js"
         }
     ]
 }
