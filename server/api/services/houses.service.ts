@@ -46,9 +46,33 @@ export class HousesService {
     async byAuctionID(auctionID: string): Promise<IHouseModel[]> {
         L.info(`fetch houses with auctionID ${auctionID}`);
 
-        const houses = (await House.find({ auctionID: auctionID }).lean().exec()) as IHouseModel[];
+        let houses = (await House.find({ auctionID: auctionID }).lean().exec()) as IHouseModel[];
+        if (!houses) {
+            const previousAuctionId: String = await this.getPreviousAuctionId(auctionID);
+            houses = (await House.find({
+                auctionID: previousAuctionId
+            })
+                .lean()
+                .exec()) as IHouseModel[];
+        }
 
         return houses;
+    }
+
+    async getPreviousAuctionId(auctionID): Promise<String> {
+        try {
+            const month = parseInt(auctionID.substring(0, 2));
+            const year = parseInt(auctionID.substring(2, auctionID.length));
+            let monthStr: String;
+            let yearStr: String;
+
+            if (month === 1) {
+                return `12${(year - 1).toString()}`;
+            }
+            return `${month.toString().padStart(2, '0')}${year.toString()}`;
+        } catch (error) {
+            return auctionID;
+        }
     }
 
     async create(houseData: IHouseModel): Promise<IHouseModel> {
