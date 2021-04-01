@@ -764,6 +764,14 @@ export class HousesService {
             longitude: parcelResponse?.coordinates ? parcelResponse.coordinates[0] : undefined,
             latitude: parcelResponse?.coordinates ? parcelResponse.coordinates[1] : undefined
         };
+        house.zillowData.apn = parcelResponse?.apn ? parcelResponse.apn : undefined;
+        house.zillowData.unpaidBalance = transactionResponse?.unpaidBalance
+            ? transactionResponse.unpaidBalance
+            : undefined;
+        house.zillowData.lenderName = transactionResponse?.lenderName
+            ? transactionResponse.lenderName
+            : undefined;
+
         house.zillowInvalid = false;
         house.zillowData.lastZillowUpdate = new Date();
 
@@ -844,7 +852,9 @@ export class HousesService {
             .exec()) as IHouseModel[];
 
         for (let house of houses) {
-            kml.push(this.buildKmlString(house, globalPPDate));
+            if (house?.coords?.longitude !== '0' && house?.coords?.latitude !== '0') {
+                kml.push(this.buildKmlString(house, globalPPDate));
+            }
         }
 
         kml.push('</Document></kml>');
@@ -916,6 +926,16 @@ export class HousesService {
                 '</value></Data>'
             );
             stream.push(
+                '<Data name="Zillow Rental Estimate"><value>',
+                house.zillowData?.zillowRentalEstimate >= 0
+                    ? new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD'
+                      }).format(house.zillowData.zillowRentalEstimate)
+                    : '',
+                '</value></Data>'
+            );
+            stream.push(
                 '<Data name="Last Sold Price"><value>',
                 house.zillowData && house.zillowData.lastSoldPrice
                     ? new Intl.NumberFormat('en-US', {
@@ -952,6 +972,26 @@ export class HousesService {
             stream.push(
                 '<Data name="Year Built"><value>',
                 house.zillowData ? house.zillowData.yearBuilt : '',
+                '</value></Data>'
+            );
+            stream.push(
+                '<Data name="APN"><value>',
+                house.zillowData?.apn ? house.zillowData.apn : '',
+                '</value></Data>'
+            );
+            stream.push(
+                '<Data name="Unpaid Balance"><value>',
+                house.zillowData?.unpaidBalance >= 0
+                    ? new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD'
+                      }).format(house.zillowData.unpaidBalance)
+                    : '',
+                '</value></Data>'
+            );
+            stream.push(
+                '<Data name="Lender Name"><value>',
+                house.zillowData?.lenderName ? house.zillowData.lenderName : '',
                 '</value></Data>'
             );
             stream.push(

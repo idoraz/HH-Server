@@ -3,6 +3,7 @@ import * as HttpStatus from 'http-status-codes';
 
 import { IHouseModel } from './../../models/house';
 import HousesService from '../../services/houses.service';
+import ConfigService from './../../services/config.service';
 
 export class Controller {
     async all(req: Request, res: Response, next: NextFunction) {
@@ -78,6 +79,10 @@ export class Controller {
 
     async downloadMap(req: Request, res: Response, next: NextFunction) {
         try {
+            try {
+                const globalPPDate = await ConfigService.updateGlobalPPDate(req.body.auctionId);
+                await HousesService.parseToKml(req.body.auctionId, globalPPDate);
+            } catch (error) {}
             const fileObject = await HousesService.downloadKMLfile();
             res.set('Access-Control-Expose-Headers', 'Content-Disposition');
             res.set('Content-Type', 'application/vnd.google-earth.kml+xml');
