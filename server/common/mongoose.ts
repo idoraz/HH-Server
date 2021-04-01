@@ -1,25 +1,27 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export default class Mongoose {
-  connectionURI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.MONGO_HOST}/${process.env.MONGO_DB}?retryWrites=true&w=majority`;
-  // connectionURI = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`;
+    connectionURI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.MONGO_HOST}/${process.env.MONGO_DB}?retryWrites=true&w=majority`;
+    // connectionURI = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`;
 
-  constructor() {}
+    constructor() {}
 
-  init() {
-    //Set up default mongoose connection
-    mongoose.connect(this.connectionURI, {
-      useFindAndModify: false,
-      useNewUrlParser: true,
-    });
+    init() {
+        //Set up default mongoose connection
+        mongoose.connect(this.connectionURI, {
+            useFindAndModify: false,
+            useNewUrlParser: true
+        });
 
-    // Get Mongoose to use the global promise library
-    mongoose.Promise = global.Promise;
+        mongoose.set('useUnifiedTopology', true);
 
-    //Get the default connection
-    const db = mongoose.connection;
+        // Get Mongoose to use the global promise library
+        mongoose.Promise = global.Promise;
 
-    //Bind connection to error event (to get notification of connection errors)
-    db.on("error", console.error.bind(console, "MongoDB connection error:"));
-  }
+        //Get the default connection
+        const db = mongoose.connection;
+
+        //Bind connection to error event (to get notification of connection errors)
+        db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+    }
 }
