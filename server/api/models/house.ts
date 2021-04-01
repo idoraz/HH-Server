@@ -37,6 +37,7 @@ export interface IHouseModel extends mongoose.Document {
     saleDate: Date;
     saleStatus: string; //TODO: use enum
     zillowData: {
+        apn: string;
         bath: number;
         coords: {
             latitude: string;
@@ -45,9 +46,11 @@ export interface IHouseModel extends mongoose.Document {
         lastSoldDate: Date;
         lastSoldPrice: number;
         lastZillowUpdate: Date;
+        lenderName: string;
         rooms: number;
         sqft: number;
         taxAssessment: number;
+        unpaidBalance: number;
         yearBuilt: number;
         zillowAddress: string;
         zillowEstimate: number;
@@ -92,6 +95,7 @@ const schema = new Schema({
     saleDate: Date,
     saleStatus: String, //TODO: use enum
     zillowData: {
+        apn: String,
         bath: Number,
         coords: {
             latitude: String,
@@ -100,9 +104,11 @@ const schema = new Schema({
         lastSoldDate: Date,
         lastSoldPrice: Number,
         lastZillowUpdate: Date,
+        lenderName: String,
         rooms: Number,
         sqft: Number,
         taxAssessment: Number,
+        unpaidBalance: Number,
         yearBuilt: Number,
         zillowAddress: String,
         zillowEstimate: Number,
