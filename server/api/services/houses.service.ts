@@ -653,66 +653,63 @@ export class HousesService {
             if (zillowUpdateHousesPromise.length === 0) {
                 return [];
             }
-            const retVal = await Promise.all(zillowUpdateHousesPromise)
-                .then(async (zillowResults: any) => {
-                    const houseUpdateRequests: Promise<IHouseModel>[] = [];
-                    for (let zillowResult of zillowResults) {
-                        try {
-                            const zestimateResponse = zillowResult[0]?.data?.bundle[0];
-                            const parcelResponse = zillowResult[1]?.data?.bundle[0];
-                            const transactionResponse = zillowResult[2]?.data?.bundle[0];
-                            if (
-                                _.isEmpty(zestimateResponse) &&
-                                _.isEmpty(parcelResponse) &&
-                                _.isEmpty(transactionResponse)
-                            ) {
-                                housesSentToZillow[houseIndex].zillowInvalid = true;
-                                this.patch(
-                                    housesSentToZillow[houseIndex].auctionNumber,
-                                    housesSentToZillow[houseIndex]
-                                );
-                                houseIndex++;
-                                continue;
-                            }
-                            const overloadedHouse: IHouseModel = this.updateHouseWithZillowData(
-                                housesSentToZillow[houseIndex],
-                                zestimateResponse,
-                                parcelResponse,
-                                transactionResponse
-                            );
-                            houseUpdateRequests.push(
-                                this.patch(overloadedHouse.auctionNumber, overloadedHouse)
-                            );
-                            houseIndex++;
-                        } catch (error) {
+
+            const zillowResults = await Promise.all(zillowUpdateHousesPromise);
+            if (!zillowResults) {
+                console.log('Failed to query zillow API');
+                return [];
+            }
+            const houseUpdateRequests: Promise<IHouseModel>[] = [];
+            for (let zillowResult of zillowResults) {
+                try {
+                    const zestimateResponse = zillowResult[0]?.data?.bundle[0];
+                    const parcelResponse = zillowResult[1]?.data?.bundle[0];
+                    const transactionResponse = zillowResult[2]?.data?.bundle[0];
+                    if (
+                        _.isEmpty(zestimateResponse) &&
+                        _.isEmpty(parcelResponse) &&
+                        _.isEmpty(transactionResponse)
+                    ) {
+                        if (!housesSentToZillow[houseIndex]?.zillowData?.zillowID) {
                             housesSentToZillow[houseIndex].zillowInvalid = true;
                             this.patch(
                                 housesSentToZillow[houseIndex].auctionNumber,
                                 housesSentToZillow[houseIndex]
                             );
-                            houseIndex++;
-                            continue;
                         }
+                        houseIndex++;
+                        continue;
                     }
-
-                    console.log(
-                        `Updating ${houseUpdateRequests.length} houses with Zillow data...`
+                    const overloadedHouse: IHouseModel = this.updateHouseWithZillowData(
+                        housesSentToZillow[houseIndex],
+                        zestimateResponse,
+                        parcelResponse,
+                        transactionResponse
                     );
-                    return await Promise.all(houseUpdateRequests)
-                        .then((houses) => {
-                            return houses;
-                        })
-                        .catch((error) => {
-                            console.log(error);
-                            return [];
-                        });
-                })
-                .catch((error) => {
-                    L.error(error.message, error);
-                    return [];
-                });
+                    houseUpdateRequests.push(
+                        this.patch(overloadedHouse.auctionNumber, overloadedHouse)
+                    );
+                    houseIndex++;
+                } catch (error) {
+                    if (!housesSentToZillow[houseIndex]?.zillowData?.zillowID) {
+                        housesSentToZillow[houseIndex].zillowInvalid = true;
+                        this.patch(
+                            housesSentToZillow[houseIndex].auctionNumber,
+                            housesSentToZillow[houseIndex]
+                        );
+                    }
+                    houseIndex++;
+                    continue;
+                }
+            }
 
-            return retVal;
+            console.log(`Updating ${houseUpdateRequests.length} houses with Zillow data...`);
+            const updateResult = await Promise.all(houseUpdateRequests);
+            if (!updateResult) {
+                console.log('Failed to update houses!');
+                return [];
+            }
+            return houses;
         } catch (error) {
             L.error(error.message, error);
             console.log(error);
