@@ -138,9 +138,11 @@ export class HousesService {
             let listing = [];
             const pages = housesPdf[0].formImage.Pages || [];
             let auctionID: string;
+            let skipHeader = false;
 
             for (let page of pages) {
-                let index = 0;
+                let index = skipHeader ? 15 : 0;
+                skipHeader = false;
                 let last = page.Texts.length;
                 let checksCounter = 0;
 
@@ -177,12 +179,16 @@ export class HousesService {
                                 }
                             }
 
-                            if (isInListingRange) {
+                            if (currentData.indexOf('Report%20Date%3A%') !== -1) {
+                                skipHeader = true;
+                                break;
+                            }
+
+                            if (isInListingRange) {                                
                                 addToListing = true;
 
                                 if (page.Texts[index].x >= 51 && page.Texts[index].x <= 52) {
                                     // Current text is the Reason For PP text which follows with the checks
-
                                     //TODO: If we don't have a reason for PP we'll get a house with unordered details
                                     listing.push(unescape(currentData)); // Adding Reason for PP
 
@@ -210,11 +216,11 @@ export class HousesService {
                                     addToListing = false;
                                 }
 
-                                if (page.Texts[index].x === page.Texts[index - 1].x) {
-                                    // Multi-lines scenario
+                                if (index > 0 && page.Texts[index].x === page.Texts[index - 1].x) {
+                                  // Multi-lines scenario
                                     listing[listing.length - 1] += unescape(currentData);
                                     addToListing = false;
-                                }
+                                }                                
 
                                 if (unescape(currentData).match(addressRegex)) {
                                     //First address was found
@@ -249,7 +255,7 @@ export class HousesService {
                                     let parsedHouse: any = {};
                                     parsedHouse.checks = {};
                                     listing.push(addresses);
-                                    if (listing.length >= 17) {
+                                    if (listing.length >= 17) {                                        
                                         parsedHouse.isPP = isPP;
                                         if (!listing[13]) {
                                             continue; //TODO: Need to debug why we get listings with no auctionNumber (very few)
@@ -432,6 +438,8 @@ export class HousesService {
                             index++;
                         }
                     } catch (ex) {
+                        console.log('Missing house: ');
+                        console.log(listing);
                         console.log(ex);
                         index++;
                     }
@@ -525,35 +533,40 @@ export class HousesService {
         const BIDLIST_FILE_PATH = 'houses/blHousing.pdf';
         const POSTPENMENTS_FILE_PATH = 'houses/psHousing.pdf';
         const BIDLIST_JSON_FILE_PATH = './pdf2json/blHousing.json';
-        const POSTPENMENTS_JSON_FILE_PATH = './pdf2json/psHousing.json';
-
-        L.info(`Retrieve Houses PDF from web site`);
+        const POSTPENMENTS_JSON_FILE_PATH = './pdf2json/psHousing.json';        
 
         try {
             // Download PDF files
+            console.log('Retrieve Houses PDF from web site');
             await this.downloadPdf(BIDLIST_PDF_URL, BIDLIST_FILE_PATH);
             await this.downloadPdf(POSTPONEMENTS_PDF_URL, POSTPENMENTS_FILE_PATH); //For some unknown reason the download of this file might take too long, it looks like an issue with the Sheriff website if it's stuck just wait 10 minutes and try again
 
             // Parse PDF to JSON
+            console.log('Parse PDF to JSON objects');
             await this.parsePdfToJson(BIDLIST_FILE_PATH, BIDLIST_JSON_FILE_PATH);
             await this.parsePdfToJson(POSTPENMENTS_FILE_PATH, POSTPENMENTS_JSON_FILE_PATH);
 
             // Translate JSON to Houses
+            console.log('Parse houses from listings');
             let blHouses = this.translateHousesJson(BIDLIST_JSON_FILE_PATH);
             let ppHouses = this.translateHousesJson(POSTPENMENTS_JSON_FILE_PATH, true);
 
             // Save houses in DB
+            console.log('Saving houses to DB');
             let houses = [...blHouses, ...ppHouses];
             const updateHousesResult = await this.updateHouses(houses);
 
             // Update houses with Judgments & Law Firms data
+            console.log('Update houses with judgments & Law Firms data');
             await this.updateJudgments();
             await this.getLawFirmsJson(updateHousesResult.auctionID);
 
             // Update houses with Zillow data
+            console.log('Update houses with Zillow data');
             await this.zillowUpdateHouses(updateHousesResult.auctionID);
 
             // Updating Invalid houses via Google Gecoding
+            console.log('Update Invalid houses via Google Gecoding');
             const auctionID = await this.getCurrentAuctionID();
             if (!auctionID) {
                 throw new Error('Unable to find current auctionID!');
@@ -561,13 +574,13 @@ export class HousesService {
             await this.invalidHousesGeolcation(auctionID);
 
             // Parse houses to KML file
+            console.log('Create KML file with houses');
             const globalPPDate = await ConfigService.updateGlobalPPDate(auctionID);
             await this.parseToKml(auctionID, globalPPDate);
 
             houses = await this.byAuctionID(updateHousesResult.auctionID);
             return houses;
         } catch (error) {
-            L.error(error.message, error);
             console.log(error);
             return [];
         }
@@ -612,8 +625,6 @@ export class HousesService {
     }
 
     async zillowUpdateHouses(auctionID: string): Promise<IHouseModel[]> {
-        L.info(`update houses with data from zillow`);
-
         try {
             const houses = await this.byAuctionID(auctionID);
             let housesSentToZillow: IHouseModel[] = [];
@@ -621,7 +632,7 @@ export class HousesService {
 
             for (let house of houses) {
                 try {
-                    if (!house.address || !_.isArray(house.address) || house.address.length < 1) {
+                    if (!house.address || !_.isArray(house.address) || house.address.length < 1) {                        
                         throw new Error('Invalid address for house!');
                     }
                     house.address[0] = house.address[0].replace('undefined', '');
@@ -643,6 +654,7 @@ export class HousesService {
                         housesSentToZillow.push(house);
                     }
                 } catch (error) {
+                    console.log(error.message);
                     house.zillowInvalid = true;
                     this.patch(house.auctionNumber, house);
                     continue;
@@ -703,15 +715,14 @@ export class HousesService {
                 }
             }
 
-            console.log(`Updating ${houseUpdateRequests.length} houses with Zillow data...`);
+            console.log(`Updating ${houseUpdateRequests.length} houses with Zillow data...`)
             const updateResult = await Promise.all(houseUpdateRequests);
             if (!updateResult) {
                 console.log('Failed to update houses!');
                 return [];
             }
-            return houses;
+            return houses;  
         } catch (error) {
-            L.error(error.message, error);
             console.log(error);
             return [];
         }
@@ -765,8 +776,8 @@ export class HousesService {
         house.zillowData.unpaidBalance = transactionResponse?.unpaidBalance
             ? transactionResponse.unpaidBalance
             : undefined;
-        house.zillowData.lenderName = transactionResponse?.lenderName
-            ? transactionResponse.lenderName
+        house.zillowData.lenderName = transactionResponse?.lenderName?.length && transactionResponse.lenderName.length > 0
+            ? transactionResponse.lenderName[0]
             : undefined;
 
         house.zillowInvalid = false;
